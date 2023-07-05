@@ -29,6 +29,7 @@ scene.add(plate);
 
 
 function receiveMessage(color){
+    console.log("color changed: " + color);
     plate.material.color.setHex(color);
 }
 
