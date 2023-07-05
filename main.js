@@ -28,7 +28,7 @@ scene.add(plate);
 
 
 
-function setGameBackgroundColor(color){
+function receiveMessage(color){
     plate.material.color.setHex(color);
 }
 
@@ -45,3 +45,7 @@ function animate(){
     cube.rotation.z += 0.01;
 }
 animate();
+
+// Event listeners
+
+window.addEventListener('message', receiveMessage, false);
