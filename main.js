@@ -1,37 +1,8 @@
-//initialize scene
 
-const scene = new THREE.Scene();
 
-const aspectRatio = window.innerWidth / window.innerHeight;
-const sceneHeight = 200;
-const sceneWidth = sceneHeight * aspectRatio;
-const camera = new THREE.OrthographicCamera(-sceneWidth / 2, sceneWidth / 2, sceneHeight / 2, -sceneHeight / 2, 0, 200);
-camera.position.set(0,-20,100);
-camera.lookAt(0,0,0);
-
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-
-const gltfLoader = new GLTFLoader();
-
-// lights
-
-const light = new THREE.DirectionalLight(0xffffff, 1);
-light.position.set(-100, 100, 100);
-scene.add(light);
-
-const textureLoader = new THREE.TextureLoader();
-const fiveTone = textureLoader.load('https://threejs.org/examples/textures/gradientMaps/fiveTone.jpg');
-fiveTone.minFilter = THREE.NearestFilter;
-fiveTone.magFilter = THREE.NearestFilter;
-
-//background plate
-
-const plate = new THREE.Mesh(new THREE.PlaneGeometry(window.innerWidth, window.innerHeight), new THREE.MeshBasicMaterial({color: 0x0000ff}));
-scene.add(plate);
-
-// car
+// *******
+// CLASSES
+// *******
 
 
 class Car {
@@ -47,11 +18,7 @@ class Car {
         //this.geometry = new THREE.BoxGeometry(20, 10,10);
         this.material = new THREE.MeshToonMaterial({color: 0x00ff00, gradientMap: fiveTone });
         //this.mesh = new THREE.Mesh(this.geometry, this.material);
-        gltfLoader.load('assets/glb/car.glb', (gltf) => {
-            gltf.scene.scale.set(5,5,5);
-            gltf.scene.rotation.set(Math.PI/2,-Math.PI/2,0);
-            this.mesh.add(gltf.scene);
-        });
+        this.mesh.add(carMesh.clone());
         this.acceleration = false;
         this.deceleration = false;
     }
@@ -82,33 +49,43 @@ class Car {
         this.mesh.children[0].children[0].children[3].material = this.material;
     }
 }
-let c = new Car(0);
-c.spawn();
 
-
-
-
-
-// animate
-function animate(){
-    renderer.render(scene, camera);
-    c.draw();
-    // cube.rotation.x += 0.01;
-    // cube.rotation.y += 0.01;
-    // cube.rotation.z += 0.01;
-    requestAnimationFrame(animate);
-}
-setTimeout(animate, 1000);
-
-// Event listeners
-
-window.addEventListener('message', receiveMessage, false);
-function receiveMessage(color){
-    console.log("color changed: " + color);
-    plate.material.color.setHex(color);
+class Wall {
+    constructor(x,y,z) {
+    }
 }
 
-window.addEventListener('keydown', keyDown, false);
+
+// *********
+// FUNCTIONS
+// *********
+
+
+function setColors() {
+    fetch('https://raw.githubusercontent.com/flug8/SimpleJS/master/colors.json')
+        .then(response => response.json())
+        .then(data => colors = data)
+        .then(() => {
+            plate.material.color.set(colors.c1);
+        });
+}
+
+async function loadCarMesh(){
+    let gltf = await gltfLoader.loadAsync('assets/glb/car.glb');
+    gltf.scene.scale.set(5,5,5);
+    gltf.scene.rotation.set(Math.PI/2,-Math.PI/2,0);
+    carMesh = gltf.scene;
+}
+
+function loadCar(){
+    c = new Car(0);
+    c.spawn();
+    let c2 = [];
+    for(let i = 0; i < 100; i++) {
+        c2[i] = new Car(i);
+    }
+}
+
 function keyDown(e){
     if(e.keyCode == 87){
         c.acceleration = true;
@@ -120,7 +97,7 @@ function keyDown(e){
         c.steeringAngle = -1;
     }
 }
-window.addEventListener('keyup', keyUp, false);
+
 function keyUp(e){
     if(e.keyCode == 87){
         c.acceleration = false;
@@ -131,6 +108,70 @@ function keyUp(e){
     }
 }
 
+// Animate
+function animate(){
+    renderer.render(scene, camera);
+    c.draw();
+    // cube.rotation.x += 0.01;
+    // cube.rotation.y += 0.01;
+    // cube.rotation.z += 0.01;
+    requestAnimationFrame(animate);
+}
+
+// ****
+// INIT
+// ****
+
+
+//LOADING
+
+async function load() {
+    let t = new Date();
+    await setColors();
+    await loadCarMesh();
+    await loadCar();
+    t = new Date() - t;
+    console.log('loading time: ' + t + 'ms');
+    await animate();
+    return true;
+}
+
+// scene
+
+const scene = new THREE.Scene();
+const aspectRatio = window.innerWidth / window.innerHeight;
+const sceneHeight = 200;
+const sceneWidth = sceneHeight * aspectRatio;
+const camera = new THREE.OrthographicCamera(-sceneWidth / 2, sceneWidth / 2, sceneHeight / 2, -sceneHeight / 2, 0, 200);
+camera.position.set(0,-20,100);
+camera.lookAt(0,0,0);
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+const gltfLoader = new GLTFLoader();
+
+// lights
+
+const light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(-100, 100, 100);
+scene.add(light);
+
+const textureLoader = new THREE.TextureLoader();
+const fiveTone = textureLoader.load('https://threejs.org/examples/textures/gradientMaps/fiveTone.jpg');
+fiveTone.minFilter = THREE.NearestFilter;
+fiveTone.magFilter = THREE.NearestFilter;
+
+//background plate
+
+const plate = new THREE.Mesh(new THREE.PlaneGeometry(window.innerWidth, window.innerHeight), new THREE.MeshBasicMaterial({color: 0x0f0f0f}));
+scene.add(plate);
+
+// get Colors
+let colors;
+
+// load car
+let carMesh;
+let c;
 
 
 // Dat gui
@@ -144,3 +185,17 @@ cameraFolder.add(camera.rotation, 'x', -.5, .5);
 cameraFolder.add(camera.rotation, 'y', -.5, .5);
 cameraFolder.add(camera.rotation, 'z', -.5, .5);
 cameraFolder.open();
+
+
+
+
+
+// ***************
+// EVENT LISTENERS
+// ***************
+
+
+window.addEventListener('keydown', keyDown, false);
+
+window.addEventListener('keyup', keyUp, false);
+
