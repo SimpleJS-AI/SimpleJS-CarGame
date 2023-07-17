@@ -23,6 +23,17 @@ class Car {
         this.deceleration = false;
 
         this.raycaster0 = new THREE.Raycaster(undefined, undefined, 0, 10);
+
+        this.raycaster = [];
+        this.raycasterData = [];
+        this.raycasterHelper = [];
+        for (let i = 0; i < 9; i++){
+            this.raycaster.push(new THREE.Raycaster(undefined, undefined, 0, 200));
+            this.raycasterHelper[i] = new THREE.ArrowHelper(undefined, undefined, 0, 0xff0000, 0 , 0);
+            this.raycasterHelper[i].position.z = 10;
+            this.raycasterHelper[i].cone.visible = false;
+            scene.add(this.raycasterHelper[i]);
+        }
     }
     spawn(){
         scene.add(this.mesh);
@@ -46,6 +57,10 @@ class Car {
         //animation
         this.mesh.children[0].rotation.x = Math.PI/2 + Math.sin(this.steeringAngle * this.speed * .1);
 
+        //raycaster
+        this.updateRaycaster();
+        this.visualizeRaycaster();
+
         //collision
         if(this.checkCollision()){
             this.mesh.position.set(0,0,0);
@@ -53,13 +68,13 @@ class Car {
         }
     }
     checkCollision(){
-        this.raycaster0.set(this.mesh.position, new THREE.Vector3(1,0,0)
+        /*this.raycaster0.set(this.mesh.position, new THREE.Vector3(1,0,0)
             .applyQuaternion(this.mesh.quaternion)
             .applyQuaternion(new THREE.Quaternion()
                 .setFromAxisAngle(new THREE.Vector3(0,0,1), -Math.PI/8)));
-        this.raycasterHelper = new THREE.ArrowHelper(this.raycaster0.ray.direction, this.raycaster0.ray.origin, 10, 0xff0000);
-        this.raycasterHelper.position.z = 10;
-        scene.add(this.raycasterHelper);
+        this.raycasterHelper0 = new THREE.ArrowHelper(this.raycaster0.ray.direction, this.raycaster0.ray.origin, 10, 0xff0000);
+        this.raycasterHelper0.position.z = 10;
+        scene.add(this.raycasterHelper0);*/
         /*let intersections = this.raycaster0.intersectObjects(scene.children, );
         if(intersections.length > 0){
             console.log(intersections[0].distance);
@@ -71,6 +86,29 @@ class Car {
             }
         }
         return false;
+    }
+    updateRaycaster(){
+        for(let i = 0; i < this.raycaster.length; i++){
+            this.raycaster[i].set(
+                this.mesh.position,
+                new THREE.Vector3(1,0,0)
+                    .applyQuaternion(this.mesh.quaternion)
+                    .applyQuaternion(new THREE.Quaternion()
+                        .setFromAxisAngle(new THREE.Vector3(0,0,1), -Math.PI/2+i*Math.PI/8)
+                    )
+            );
+            let intersections = this.raycaster[i].intersectObjects(w.map(w => w.mesh));
+            this.raycasterData[i] = intersections.length > 0 ? Math.floor(intersections[0].distance): 200;
+        }
+        console.log(this.raycasterData);
+    }
+    visualizeRaycaster(){
+        for(let i = 0; i < this.raycasterHelper.length; i++){
+            this.raycasterHelper[i].position.copy(this.raycaster[i].ray.origin);
+            this.raycasterHelper[i].position.z = 10;
+            this.raycasterHelper[i].setLength(200);
+            this.raycasterHelper[i].setDirection(this.raycaster[i].ray.direction);
+        }
     }
     setColor(color){
         //this.mesh.children[0].children[0].children[3].material.color.set(color);
