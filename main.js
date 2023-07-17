@@ -21,6 +21,8 @@ class Car {
         this.mesh.add(carMesh.clone());
         this.acceleration = false;
         this.deceleration = false;
+
+        this.raycaster0 = new THREE.Raycaster(undefined, undefined, 0, 10);
     }
     spawn(){
         scene.add(this.mesh);
@@ -43,15 +45,50 @@ class Car {
         }
         //animation
         this.mesh.children[0].rotation.x = Math.PI/2 + Math.sin(this.steeringAngle * this.speed * .1);
+
+        //collision
+        if(this.checkCollision()){
+            this.mesh.position.set(0,0,0);
+            this.mesh.rotation.z = 0;
+        }
+    }
+    checkCollision(){
+        this.raycaster0.set(this.mesh.position, new THREE.Vector3(1,0,0)
+            .applyQuaternion(this.mesh.quaternion)
+            .applyQuaternion(new THREE.Quaternion()
+                .setFromAxisAngle(new THREE.Vector3(0,0,1), -Math.PI/8)));
+        this.raycasterHelper = new THREE.ArrowHelper(this.raycaster0.ray.direction, this.raycaster0.ray.origin, 10, 0xff0000);
+        this.raycasterHelper.position.z = 10;
+        scene.add(this.raycasterHelper);
+        /*let intersections = this.raycaster0.intersectObjects(scene.children, );
+        if(intersections.length > 0){
+            console.log(intersections[0].distance);
+        }*/
+        this.carBox = new THREE.Box3().setFromObject(this.mesh);
+        for (const wall of w){
+            if(this.carBox.intersectsBox(new THREE.Box3().setFromObject(wall.mesh))){
+                return true;
+            }
+        }
+        return false;
     }
     setColor(color){
         //this.mesh.children[0].children[0].children[3].material.color.set(color);
-        this.mesh.children[0].children[0].children[3].material = this.material;
+        //this.mesh.children[0].children[0].children[3].material = this.material;
+        this.mesh.children[0].children[0].children[3].material = new THREE.MeshToonMaterial({color: color, gradientMap: fiveTone });
     }
 }
 
 class Wall {
-    constructor(x,y,z) {
+    constructor(x1,y1,x2,y2){
+        this.p1 = new THREE.Vector3(x1,y1,0);
+        this.p2 = new THREE.Vector3(x2,y2,0);
+        this.material = new THREE.MeshToonMaterial({color: 0x00ff00, gradientMap: fiveTone });
+        this.geometry = new THREE.BoxGeometry(this.p1.distanceTo(this.p2), 10,10);
+        this.mesh = new THREE.Mesh(this.geometry, this.material);
+        this.mesh.position.set((x1+x2)/2,(y1+y2)/2,0);
+        this.mesh.rotation.z = Math.atan2(y2-y1,x2-x1);
+        scene.add(this.mesh);
     }
 }
 
@@ -84,6 +121,16 @@ function loadCar(){
     for(let i = 0; i < 100; i++) {
         c2[i] = new Car(i);
     }
+    const walls = [
+        [100, -100, 100, 100],
+        [-100, -100, -100, 100],
+        [-100, 100, 100, 100],
+        [-100, -100, 100, -100]
+    ];
+    for(const wall of walls){
+        w.push(new Wall(...wall));
+    }
+
 }
 
 function keyDown(e){
@@ -163,7 +210,7 @@ fiveTone.magFilter = THREE.NearestFilter;
 
 //background plate
 
-const plate = new THREE.Mesh(new THREE.PlaneGeometry(window.innerWidth, window.innerHeight), new THREE.MeshBasicMaterial({color: 0x0f0f0f}));
+const plate = new THREE.Mesh(new THREE.PlaneGeometry(window.innerWidth, window.innerHeight), new THREE.MeshToonMaterial({color: 0x00ff00, gradientMap: fiveTone }));
 scene.add(plate);
 
 // get Colors
@@ -172,6 +219,8 @@ let colors;
 // load car
 let carMesh;
 let c;
+
+let w = [];
 
 
 // Dat gui
@@ -188,7 +237,7 @@ cameraFolder.open();
 
 
 
-
+setTimeout(load, 0);
 
 // ***************
 // EVENT LISTENERS
