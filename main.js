@@ -100,7 +100,7 @@ class Car {
             let intersections = this.raycaster[i].intersectObjects(w.map(w => w.mesh));
             this.raycasterData[i] = intersections.length > 0 ? Math.floor(intersections[0].distance): 200;
         }
-        console.log(this.raycasterData);
+        //console.log(this.raycasterData);
     }
     visualizeRaycaster(){
         for(let i = 0; i < this.raycasterHelper.length; i++){
