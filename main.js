@@ -61,6 +61,18 @@ class Car {
         this.updateRaycaster();
         this.visualizeRaycaster();
 
+        //NN
+        let nnInput = this.raycasterData;
+        let nnOutput = this.individual.nn.ff(nnInput);
+        this.steeringAngle = nnOutput[0] * 2 - 1;
+        if(nnOutput[1] > .5){
+            this.acceleration = true;
+            this.deceleration = false;
+        } else {
+            this.acceleration = false;
+            this.deceleration = true;
+        }
+
         //collision
         if(this.checkCollision()){
             this.mesh.position.set(0,0,0);
@@ -88,6 +100,7 @@ class Car {
         return false;
     }
     updateRaycaster(){
+        this.raycasterData = [];
         for(let i = 0; i < this.raycaster.length; i++){
             this.raycaster[i].set(
                 this.mesh.position,
@@ -100,7 +113,7 @@ class Car {
             let intersections = this.raycaster[i].intersectObjects(w.map(w => w.mesh));
             this.raycasterData[i] = intersections.length > 0 ? Math.floor(intersections[0].distance): 200;
         }
-        //console.log(this.raycasterData);
+        this.raycasterData = this.raycasterData.map(x => x/200);
     }
     visualizeRaycaster(){
         for(let i = 0; i < this.raycasterHelper.length; i++){
@@ -130,7 +143,6 @@ class Wall {
     }
 }
 
-
 // *********
 // FUNCTIONS
 // *********
@@ -153,12 +165,12 @@ async function loadCarMesh(){
 }
 
 function loadCar(){
-    c = new Car(0);
-    c.spawn();
+    /*c = new Car(0);
+    c.spawn();*/
     let c2 = [];
-    for(let i = 0; i < 100; i++) {
-        c2[i] = new Car(i);
-    }
+    // for(let i = 0; i < 100; i++) {
+    //     c2[i] = new Car(i);
+    // }
     const walls = [
         [100, -100, 100, 100],
         [-100, -100, -100, 100],
@@ -196,7 +208,8 @@ function keyUp(e){
 // Animate
 function animate(){
     renderer.render(scene, camera);
-    c.draw();
+    //c.draw();
+    ga.population.forEach(x => x.obj.draw());
     // cube.rotation.x += 0.01;
     // cube.rotation.y += 0.01;
     // cube.rotation.z += 0.01;
@@ -215,6 +228,7 @@ async function load() {
     await setColors();
     await loadCarMesh();
     await loadCar();
+    ga = new GeneticAlgorithm(populationSize, nnInput, nnHidden, nnOutput, nnLR, objClass);
     t = new Date() - t;
     console.log('loading time: ' + t + 'ms');
     await animate();
@@ -275,7 +289,6 @@ cameraFolder.open();
 
 
 
-setTimeout(load, 0);
 
 // ***************
 // EVENT LISTENERS
@@ -286,3 +299,16 @@ window.addEventListener('keydown', keyDown, false);
 
 window.addEventListener('keyup', keyUp, false);
 
+
+
+// NN SETUP
+
+let populationSize = 100;
+let nnInput = 9;
+let nnHidden = 9;
+let nnOutput = 2;
+let nnLR = .1;
+let objClass = Car;
+let ga;
+
+setTimeout(load, 200);
