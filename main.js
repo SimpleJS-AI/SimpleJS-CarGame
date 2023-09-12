@@ -15,11 +15,8 @@ class Car {
         this.steeringAngle = 0;
         this.failed = false;
         this.mesh = new THREE.Group();
-        scene.add(this.mesh);
-        //this.geometry = new THREE.BoxGeometry(20, 10,10);
-        this.material = new THREE.MeshToonMaterial({color: 0x00ff00, gradientMap: fiveTone });
-        //this.mesh = new THREE.Mesh(this.geometry, this.material);
         this.mesh.add(carMesh.clone());
+        scene.add(this.mesh);
         this.acceleration = false;
         this.deceleration = false;
 
@@ -62,7 +59,7 @@ class Car {
 
             //raycaster
             this.updateRaycaster();
-            this.visualizeRaycaster();
+            //this.visualizeRaycaster();
 
             //NN
             let nnInput = this.raycasterData;
@@ -84,6 +81,10 @@ class Car {
                 this.updateRaycaster();
                 this.visualizeRaycaster();
             }
+        }else if(this.mesh != null){
+            removeObjWithChildren(this.mesh);
+            scene.remove(this.mesh);
+            this.mesh = null;
         }
     }
     checkCollision(){
@@ -164,12 +165,14 @@ function setColors() {
         });
 }
 
+
 async function loadCarMesh(){
     let gltf = await gltfLoader.loadAsync('assets/glb/car.glb');
     gltf.scene.scale.set(5,5,5);
     gltf.scene.rotation.set(Math.PI/2,-Math.PI/2,0);
     carMesh = gltf.scene;
 }
+
 
 function loadCar(){
     /*c = new Car(0);
@@ -189,10 +192,39 @@ function loadCar(){
     }
 
 }
-
 function evolve() {
-    ga.evolve();
-    ga
+    ga.population.forEach(x => x.obj.failed = true);
+    setTimeout(() => {
+        ga.evolve();
+    }, 1000);
+}
+
+function removeObjWithChildren(obj){
+    /*if(obj.children.length > 0){
+        for(const child of obj.children){
+            removeObjWithChildren(child);
+        }
+    }
+    if(obj.isMesh){
+        obj.geometry.dispose();
+        obj.material.dispose();
+        if (obj.material.map) {
+            obj.material.map.dispose();
+        }
+    }
+    if(obj.parent){
+        obj.parent.remove(obj);
+    }*/
+
+    obj.traverse((c) => {
+        if (c.isMesh) {
+            c.geometry.dispose();
+            c.material.dispose();
+            if (c.material.map) {
+                c.material.map.dispose();
+            }
+        }
+    });
 }
 
 function keyDown(e){
@@ -251,10 +283,8 @@ async function load() {
 
 const scene = new THREE.Scene();
 const aspectRatio = window.innerWidth / window.innerHeight;
-const sceneHeight = 200;
-const sceneWidth = sceneHeight * aspectRatio;
-const camera = new THREE.OrthographicCamera(-sceneWidth / 2, sceneWidth / 2, sceneHeight / 2, -sceneHeight / 2, 0, 200);
-camera.position.set(0,-20,100);
+const camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 1000);
+camera.position.set(0,-20,200);
 camera.lookAt(0,0,0);
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
