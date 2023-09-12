@@ -13,6 +13,7 @@ class Car {
         this.z = 0;
         this.speed = 0;
         this.steeringAngle = 0;
+        this.failed = false;
         this.mesh = new THREE.Group();
         scene.add(this.mesh);
         //this.geometry = new THREE.BoxGeometry(20, 10,10);
@@ -39,44 +40,50 @@ class Car {
         scene.add(this.mesh);
     }
     draw(){
-        this.direction = new THREE.Vector3(1,0,0);
-        this.direction.applyQuaternion(this.mesh.quaternion);   //make direction relative to rotation
-        this.x += this.speed;
-        this.mesh.position.add(this.direction.multiplyScalar(this.speed));
-        this.mesh.rotation.z += this.speed * .025 * this.steeringAngle;
-        if(this.acceleration && this.speed < 2){
-            this.speed += .05;
-        }else if(this.speed > 0){
-            if (this.deceleration){
-                this.speed -= .05;
+        if(!this.failed) {
+            this.direction = new THREE.Vector3(1, 0, 0);
+            this.direction.applyQuaternion(this.mesh.quaternion);   //make direction relative to rotation
+            this.x += this.speed;
+            this.mesh.position.add(this.direction.multiplyScalar(this.speed));
+            this.mesh.rotation.z += this.speed * .025 * this.steeringAngle;
+            if (this.acceleration && this.speed < 2) {
+                this.speed += .05;
+            } else if (this.speed > 0) {
+                if (this.deceleration) {
+                    this.speed -= .05;
+                }
+                this.speed -= .01;
+            } else {
+                this.speed = 0;
             }
-            this.speed -= .01;
-        }else{
-            this.speed = 0;
-        }
-        //animation
-        this.mesh.children[0].rotation.x = Math.PI/2 + Math.sin(this.steeringAngle * this.speed * .1);
+            this.individual.fitness += this.speed;
+            //animation
+            this.mesh.children[0].rotation.x = Math.PI / 2 + Math.sin(this.steeringAngle * this.speed * .1);
 
-        //raycaster
-        this.updateRaycaster();
-        this.visualizeRaycaster();
+            //raycaster
+            this.updateRaycaster();
+            this.visualizeRaycaster();
 
-        //NN
-        let nnInput = this.raycasterData;
-        let nnOutput = this.individual.nn.ff(nnInput);
-        this.steeringAngle = nnOutput[0] * 2 - 1;
-        if(nnOutput[1] > .5){
-            this.acceleration = true;
-            this.deceleration = false;
-        } else {
-            this.acceleration = false;
-            this.deceleration = true;
-        }
+            //NN
+            let nnInput = this.raycasterData;
+            let nnOutput = this.individual.nn.ff(nnInput);
+            this.steeringAngle = nnOutput[0] * 4 - 2;
+            if (nnOutput[1] > .5) {
+                this.acceleration = true;
+                this.deceleration = false;
+            } else {
+                this.acceleration = false;
+                this.deceleration = true;
+            }
 
-        //collision
-        if(this.checkCollision()){
-            this.mesh.position.set(0,0,0);
-            this.mesh.rotation.z = 0;
+            //collision
+            if (this.checkCollision()) {
+                this.mesh.position.set(0, 0, 0);
+                this.mesh.rotation.z = 0;
+                this.failed = true;
+                this.updateRaycaster();
+                this.visualizeRaycaster();
+            }
         }
     }
     checkCollision(){
@@ -181,6 +188,11 @@ function loadCar(){
         w.push(new Wall(...wall));
     }
 
+}
+
+function evolve() {
+    ga.evolve();
+    ga
 }
 
 function keyDown(e){
@@ -303,7 +315,7 @@ window.addEventListener('keyup', keyUp, false);
 
 // NN SETUP
 
-let populationSize = 100;
+let populationSize = 50;
 let nnInput = 9;
 let nnHidden = 9;
 let nnOutput = 2;
