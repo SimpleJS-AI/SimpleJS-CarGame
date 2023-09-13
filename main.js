@@ -322,7 +322,13 @@ function removeObjWithChildren(obj){
     });
 }
 function keyDown(e){
-    if(e.keyCode == 87){
+    if(e.keyCode == 13) {
+        setBuildMode(!buildMode);
+    }else if(e.keyCode == 32){
+        active = !active;
+        if(active)animate();
+    }
+    /*if(e.keyCode == 87){
         c.acceleration = true;
     }else if(e.keyCode == 83){
         c.deceleration = true;
@@ -330,7 +336,7 @@ function keyDown(e){
         c.steeringAngle = 1;
     }else if(e.keyCode == 68){
         c.steeringAngle = -1;
-    }
+    }*/
 }
 function keyUp(e){
     if(e.keyCode == 87){
