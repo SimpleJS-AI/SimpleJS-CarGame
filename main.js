@@ -391,7 +391,7 @@ async function load() {
     console.log('loading time: ' + t + 'ms');
     addTemplateWalls();
     await animate();
-    await animate();
+    setTimeout(animate, 200);
     return true;
 }
 
@@ -435,7 +435,7 @@ let w = [];
 
 // Dat gui
 
-const gui = new dat.GUI();
+/*const gui = new dat.GUI();
 const cameraFolder = gui.addFolder('Camera');
 cameraFolder.add(camera.position, 'x', -100, 100);
 cameraFolder.add(camera.position, 'y', -100, 100);
@@ -443,7 +443,7 @@ cameraFolder.add(camera.position, 'z', -100, 500);
 cameraFolder.add(camera.rotation, 'x', -.5, .5);
 cameraFolder.add(camera.rotation, 'y', -.5, .5);
 cameraFolder.add(camera.rotation, 'z', -.5, .5);
-cameraFolder.open();
+cameraFolder.open();*/
 
 
 
