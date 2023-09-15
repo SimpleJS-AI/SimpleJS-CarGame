@@ -457,6 +457,10 @@ window.addEventListener('keydown', keyDown, false);
 
 window.addEventListener('keyup', keyUp, false);
 
+window.addEventListener('resize', () => {
+    location.reload();
+}, false);
+
 
 
 // NN SETUP
