@@ -4,9 +4,24 @@
 // CLASSES
 // *******
 
-
+let trainingData = [];
+class TrainingData{
+    constructor(input, output){
+        this.input = input;
+        this.output = output;
+    }
+    isEqual(other){
+        if(this.input.length === other.input.length && this.output.length === other.output.length){
+            if(this.input.every((x,i) => x === other.input[i]) && this.output.every((x,i) => x === other.output[i])){
+                return true;
+            }
+        }
+        return false;
+    }
+}
 class Car {
-    constructor(individual){
+    constructor(individual, manual = false){
+        this.manual = manual;
         this.individual = individual;
         this.x = wpos(10);
         this.y = wpos(19);
@@ -46,8 +61,8 @@ class Car {
             this.x += this.speed;
             this.mesh.position.add(this.direction.multiplyScalar(this.speed));
             this.mesh.rotation.z += this.speed * .025 * this.steeringAngle;
-            if (this.acceleration && this.speed < 2) {
-                this.speed += .05;
+            if (this.acceleration && this.speed < (this.manual ? .5 : 2) ) {
+                this.speed += this.manual ? .01 : .05;
             } else if (this.speed > 0) {
                 if (this.deceleration) {
                     this.speed -= .05;
@@ -56,7 +71,9 @@ class Car {
             } else {
                 this.speed = 0;
             }
-            this.individual.fitness += this.speed;
+            if(!this.manual) {
+                this.individual.fitness += this.speed;
+            }
             //animation
             this.mesh.children[0].rotation.x = Math.PI / 2 + Math.sin(this.steeringAngle * this.speed * .1);
 
@@ -65,15 +82,24 @@ class Car {
             //this.visualizeRaycaster();
 
             //NN
-            let nnInput = this.raycasterData;
-            let nnOutput = this.individual.nn.ff(nnInput);
-            this.steeringAngle = nnOutput[0] * 4 - 2;
-            if (nnOutput[1] > .5) {
-                this.acceleration = true;
-                this.deceleration = false;
-            } else {
-                this.acceleration = false;
-                this.deceleration = true;
+            if(!this.manual) {
+                let nnInput = this.raycasterData;
+                let nnOutput = this.individual.nn.ff(nnInput);
+                this.steeringAngle = nnOutput[0] * 4 - 2;
+                if (nnOutput[1] > .5) {
+                    this.acceleration = true;
+                    this.deceleration = false;
+                } else {
+                    this.acceleration = false;
+                    this.deceleration = true;
+                }
+            }else{
+                let data = new TrainingData(this.raycasterData, [this.steeringAngle / 4 + 0.5, this.acceleration ? 1 : 0])
+                if(trainingData.length === 0){
+                    trainingData.push(data);
+                } else if(!trainingData[trainingData.length - 1].isEqual(data)){
+                    trainingData.push(data);
+                }
             }
 
             //collision
@@ -102,17 +128,24 @@ class Car {
             }
         }*/
         let failed = false;
-        if(this.speed === 0) this.speedFailCounter++;
-        if(this.speedFailCounter > 100)failed = true;
+        if(!this.manual) {
+            if (this.speed === 0) this.speedFailCounter++;
+            if (this.speedFailCounter > 100) failed = true;
+        }
         for(let i = 0; i < this.raycaster.length; i++){
             if(this.raycasterData[i] < .02){
                 failed = true;
             }
         }
         if(failed){
-            failedCounter++;
-            this.failed = true;
             this.updateRaycaster();
+            if(this.manual){
+                this.mesh.position.set(wpos(10),wpos(19),0);
+                this.mesh.rotation.set(0,0,Math.PI);
+                return;
+            }
+            this.failed = true;
+            failedCounter++;
         }
     }
     updateRaycaster(){
@@ -321,49 +354,87 @@ function removeObjWithChildren(obj){
         }
     });
 }
-function keyDown(e){
-    if(e.keyCode == 13) {
-        setBuildMode(!buildMode);
-    }else if(e.keyCode == 32){
-        active = !active;
-        if(active)animate();
+let manualDriveStartTime = 0;
+function keyDown(e) {
+    if(manualMode) {
+        if (e.keyCode == 87) {
+            c.acceleration = true;
+            manualDriveStartTime = performance.now();
+        } else if (e.keyCode == 83) {
+            c.deceleration = true;
+        } else if (e.keyCode == 65) {
+            c.steeringAngle = 1;
+        } else if (e.keyCode == 68) {
+            c.steeringAngle = -1;
+        }
     }
-    /*if(e.keyCode == 87){
-        c.acceleration = true;
-    }else if(e.keyCode == 83){
-        c.deceleration = true;
-    }else if(e.keyCode == 65){
-        c.steeringAngle = 1;
-    }else if(e.keyCode == 68){
-        c.steeringAngle = -1;
-    }*/
 }
 function keyUp(e){
-    if(e.keyCode == 87){
-        c.acceleration = false;
-    }else if(e.keyCode == 83){
-        c.deceleration = false;
-    }else if(e.keyCode == 65 || e.keyCode == 68){
-        c.steeringAngle = 0;
+    if(manualMode) {
+        if (e.keyCode == 87) {
+            c.acceleration = false;
+            manualDriveTime += performance.now() - manualDriveStartTime;
+            manualDriveStartTime = 0;
+        } else if (e.keyCode == 83) {
+            c.deceleration = false;
+        } else if (e.keyCode == 65 || e.keyCode == 68) {
+            c.steeringAngle = 0;
+        }
+    }
+}
+
+let trainingIterations = 200; //can be changed
+let trainingPosition = 0; // do not change
+function train(){
+    if(trainingPosition >= trainingData.length){
+        trainingPosition = 0;
+        trainingIterations--;
+        console.log("next Iteration");
+        setProgressValue(200 - trainingIterations);
+    }
+    if(trainingIterations <= 0 || trainingData.length === 0){
+        console.log("training finished");
+        setNextPhase();
+        trainingPhase = false;
+        return;
+    }
+    cnn.bp(trainingData[trainingPosition].input, trainingData[trainingPosition].output);
+    trainingPosition++;
+}
+function setWeights(){
+    for(let i = 0; i < ga.population.length; i++){
+        ga.population[i].nn = cnn;
     }
 }
 
 // Animate
+let manualMode = true;
+let trainingPhase = false;
 function animate(){
+    let nextFrameTime = performance.now();
     renderer.render(scene, camera);
-    //c.draw();
-    ga.population.forEach(x => x.obj.draw());
-    moveCameraSmoothly();
-    if(failedCounter >= populationSize) {
-        failedCounter = 0;
-        evolve();
+    if(active) {
+        if(manualMode) {
+            c.draw();
+        }
+        else {
+            ga.population.forEach(x => x.obj.draw());
+            if (failedCounter >= populationSize) {
+                failedCounter = 0;
+                evolve();
+            }
+        }
     }
+    if(trainingPhase) train();
+    while(performance.now() <= nextFrameTime + 1000/30 && trainingPhase){
+        train();
+    }
+    if(nextPhase === 1) setProgressValue((manualDriveTime + (manualDriveStartTime === 0 ? 0 : (performance.now() - manualDriveStartTime))) / 100);
+    moveCameraSmoothly();
     // cube.rotation.x += 0.01;
     // cube.rotation.y += 0.01;
     // cube.rotation.z += 0.01;
-    if(active) {
-        requestAnimationFrame(animate);
-    }
+    requestAnimationFrame(animate);
 }
 
 // ****
@@ -387,12 +458,82 @@ async function load() {
         w.push(new Wall(...wall,true));
     }
     ga = new GeneticAlgorithm(populationSize, nnInput, nnHidden, nnOutput, nnLR, objClass);
+    c = new Car(null, true);
     t = new Date() - t;
     console.log('loading time: ' + t + 'ms');
     addTemplateWalls();
     await animate();
     setTimeout(animate, 200);
     return true;
+}
+let nextPhase = 0;
+let manualDriveTime = 0;
+function setNextPhase(){
+    let nextButton = document.querySelector("#next");
+    let progressBar = document.querySelector("#progress");
+    let infoText = document.querySelector(".info-text");
+    let phases = document.querySelectorAll(".phase");
+    let arrows = document.querySelectorAll(".arrow");
+    let nextGenerationButton = document.querySelector("#next-evolution");
+    switch(nextPhase){
+        case 0:
+            nextButton.classList.remove("active");
+            infoText.classList.add("active");
+            progressBar.classList.add("active");
+            phases[0].classList.add("active");
+            manualDriveTime = 0;
+            active = true;
+            break;
+        case 1:
+            arrows[0].classList.add("active");
+            nextButton.classList.add("active");
+            infoText.classList.remove("active");
+            phases[0].classList.remove("active");
+            phases[0].classList.add("finished");
+            progressBar.classList.remove("active");
+            break;
+        case 2:
+            scene.remove(c.mesh);
+            trainingPhase = true;
+            arrows[0].classList.remove("active");
+            arrows[0].classList.add("finished");
+            phases[1].classList.add("active");
+            infoText.classList.add("active");
+            infoText.innerHTML = "training...";
+            nextButton.classList.remove("active");
+            progressBar.classList.add("active");
+            break;
+        case 3:
+            arrows[1].classList.add("active");
+            nextButton.classList.add("active");
+            infoText.classList.remove("active");
+            phases[1].classList.remove("active");
+            phases[1].classList.add("finished");
+            progressBar.classList.remove("active");
+            break;
+        case 4:
+            phases[2].classList.add("active");
+            arrows[1].classList.remove("active");
+            arrows[1].classList.add("finished");
+            infoText.classList.add("active");
+            infoText.innerHTML = "training...";
+            nextButton.classList.remove("active");
+            setWeights();
+            manualMode = false;
+            nextGenerationButton.disabled = false;
+            break;
+
+    }
+    console.log(nextPhase);
+    nextPhase++;
+}
+
+function setProgressValue(val){
+    let progressBar = document.querySelector("#progress");
+    progressBar.value = val;
+    if(val >= 200 && nextPhase === 1){
+        setNextPhase();
+    }
 }
 
 // scene
@@ -473,5 +614,7 @@ let nnLR = .1;
 let objClass = Car;
 let ga;
 let failedCounter = 0;
+
+let cnn = new NeuralNetwork(nnInput, nnHidden, nnOutput, nnLR);
 
 setTimeout(load, 200);

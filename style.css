@@ -9,6 +9,91 @@
   left: 0;
 }
 
+body {
+  font-family: "Google Sans Text", sans-serif;
+}
+
+.timeline {
+  position: absolute;
+  display: grid;
+  padding: 8px;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  grid-template-columns: 160px 40px 160px 40px 160px;
+  grid-template-rows: 40px 20px 40px;
+  align-items: stretch;
+  justify-items: stretch;
+}
+.timeline .info-text {
+  grid-column: 1/6;
+  grid-row: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
+  color: lightgray;
+  pointer-events: none;
+  opacity: 0;
+}
+.timeline .info-text.active {
+  opacity: 1;
+}
+.timeline #next {
+  grid-column: 3/4;
+  grid-row: 1;
+  opacity: 0;
+  pointer-events: none;
+}
+.timeline #next.active {
+  opacity: 1;
+  pointer-events: all;
+}
+.timeline progress {
+  transition: all 0.2s ease;
+  grid-column: 1/6;
+  grid-row: 2;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+.timeline progress.active {
+  opacity: 1;
+}
+.timeline progress[value]::-webkit-progress-bar {
+  transition: width 0.2s ease;
+}
+.timeline .phase {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 5px solid darkslategray;
+  border-radius: 12px;
+  color: darkslategray;
+}
+.timeline .phase.active {
+  border: 5px solid lightgray;
+  color: lightgray;
+}
+.timeline .phase.finished {
+  border: 5px solid gray;
+  color: gray;
+}
+.timeline .arrow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.timeline .arrow span {
+  color: darkslategray;
+}
+.timeline .arrow.active span {
+  color: lightgray;
+}
+.timeline .arrow.finished span {
+  color: gray;
+}
+
 button {
   all: unset;
   cursor: pointer;
@@ -26,8 +111,20 @@ button span {
   color: white;
 }
 
+button:disabled, button[disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .material-symbols-rounded {
   font-variation-settings: "FILL" 0, "wght" 700, "GRAD" 0, "opsz" 24;
+}
+
+@font-face {
+  font-family: "Google Sans Text";
+  font-style: normal;
+  font-weight: 400;
+  src: url("assets/fonts/GoogleSansText.woff2") format("woff2");
 }
 
 /*# sourceMappingURL=style.css.map */

@@ -14,10 +14,19 @@
         }
     </style>
     <div class="controls">
-        <button id="start"><span class="material-symbols-rounded">play_arrow</span></button>
-        <button id="reset"><span class="material-symbols-rounded">refresh</span></button>
-        <button id="next-evolution"><span class="material-symbols-rounded">skip_next</span></button>
-        <button id="build-mode"><span class="material-symbols-rounded">edit</span></button>
+        <button title="Restart" id="reset" onclick="location.href = location.href"><span class="material-symbols-rounded">refresh</span></button>
+        <button title="Switch Build-mode" id="build-mode" onclick="setBuildMode(!buildMode);"><span class="material-symbols-rounded">edit</span></button>
+        <button title="Next Generation" id="next-evolution" disabled onclick="evolve()"><span class="material-symbols-rounded">skip_next</span></button>
+    </div>
+    <div class="timeline">
+        <span class="info-text">Begin driving by using W,A,S,D ...</span>
+        <button title="Next Phase" id="next" class="active" onclick="setNextPhase();"><span class="material-symbols-rounded">fast_forward</span></button>
+        <progress id="progress" value="0" max="200"></progress>
+        <div class="phase"><span>Data Collection</span></div>
+        <div class="arrow"><span class="material-symbols-rounded">fast_forward</span></div>
+        <div class="phase"><span>Backpropagation</span></div>
+        <div class="arrow"><span class="material-symbols-rounded">fast_forward</span></div>
+        <div class="phase"><span>Genetic Algorithm</span></div>
     </div>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
