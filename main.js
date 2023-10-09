@@ -1,5 +1,7 @@
 
 
+let colors = ['#b38ee6','#260a4d','#6d4e97','#766194','#fff'];
+
 // *******
 // CLASSES
 // *******
@@ -197,9 +199,9 @@ class Wall {
         this.y2 = wpos(y2);
         this.p1 = new THREE.Vector3(this.x1,this.y1,0);
         this.p2 = new THREE.Vector3(this.x2,this.y2,0);
-        this.material = new THREE.MeshLambertMaterial({color: 0x00ff00});
+        this.material = new THREE.MeshLambertMaterial({color: colors[2]});
         if(border){
-            this.material.color.set(0xff0000);
+            this.material.color.set(colors[3]);
         }
         this.geometry = new THREE.BoxGeometry(this.p1.distanceTo(this.p2), 5,5);
         this.mesh = new THREE.Mesh(this.geometry, this.material);
@@ -305,14 +307,7 @@ function setBuildMode(bm){
 // *********
 
 
-function setColors() {
-    fetch('https://raw.githubusercontent.com/flug8/SimpleJS/master/colors.json')
-        .then(response => response.json())
-        .then(data => colors = data)
-        .then(() => {
-            plate.material.color.set(colors.c1);
-        });
-}
+
 
 
 async function loadCarMesh(){
@@ -320,6 +315,7 @@ async function loadCarMesh(){
     gltf.scene.scale.set(5,5,5);
     gltf.scene.rotation.set(Math.PI/2,-Math.PI/2,0);
     carMesh = gltf.scene;
+    carMesh.children[0].children[3].material.color.set(colors[4]);
 }
 function evolve() {
     ga.population.forEach(x => x.obj.failed = true);
@@ -446,7 +442,6 @@ let active = false;
 
 async function load() {
     let t = new Date();
-    await setColors();
     await loadCarMesh();
     const walls = [
         [-1, -1, -1, 21],
@@ -561,11 +556,10 @@ fiveTone.magFilter = THREE.NearestFilter;
 
 //background plate
 
-const plate = new THREE.Mesh(new THREE.PlaneGeometry(window.innerWidth*3, window.innerHeight*3), new THREE.MeshToonMaterial({color: 0x00ff00, gradientMap: fiveTone }));
+const plate = new THREE.Mesh(new THREE.PlaneGeometry(window.innerWidth*3, window.innerHeight*3), new THREE.MeshToonMaterial({color: colors[0], gradientMap: fiveTone }));
 scene.add(plate);
 
 // get Colors
-let colors;
 
 // load car
 let carMesh;

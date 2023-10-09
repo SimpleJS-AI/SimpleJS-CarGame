@@ -13,6 +13,13 @@ body {
   font-family: "Google Sans Text", sans-serif;
 }
 
+:root {
+  --a1: #b38ee6;
+  --a2: #260a4d;
+  --a3: #6d4e97;
+  --a4: #766194;
+}
+
 .timeline {
   position: absolute;
   display: grid;
@@ -32,7 +39,7 @@ body {
   justify-content: center;
   align-items: center;
   font-size: 18px;
-  color: lightgray;
+  color: var(--a2);
   pointer-events: none;
   opacity: 0;
 }
@@ -54,8 +61,11 @@ body {
   grid-column: 1/6;
   grid-row: 2;
   width: 100%;
-  height: 100%;
+  height: 50%;
+  border-radius: 99px;
+  overflow: hidden;
   opacity: 0;
+  background-color: white;
 }
 .timeline progress.active {
   opacity: 1;
@@ -63,21 +73,29 @@ body {
 .timeline progress[value]::-webkit-progress-bar {
   transition: width 0.2s ease;
 }
+.timeline progress::-webkit-progress-value {
+  background-color: var(--a2);
+  background: var(--a2);
+}
+.timeline progress::-webkit-progress-bar {
+  background-color: var(--a3);
+  background: var(--a3);
+}
 .timeline .phase {
   display: flex;
   justify-content: center;
   align-items: center;
-  border: 5px solid darkslategray;
+  border: 5px solid var(--a4);
   border-radius: 12px;
-  color: darkslategray;
+  color: var(--a4);
 }
 .timeline .phase.active {
-  border: 5px solid lightgray;
-  color: lightgray;
+  border: 5px solid var(--a2);
+  color: var(--a2);
 }
 .timeline .phase.finished {
-  border: 5px solid gray;
-  color: gray;
+  border: 5px solid var(--a3);
+  color: var(--a3);
 }
 .timeline .arrow {
   display: flex;
@@ -85,13 +103,13 @@ body {
   align-items: center;
 }
 .timeline .arrow span {
-  color: darkslategray;
+  color: var(--a4);
 }
 .timeline .arrow.active span {
-  color: lightgray;
+  color: var(--a2);
 }
 .timeline .arrow.finished span {
-  color: gray;
+  color: var(--a3);
 }
 
 button {
@@ -99,7 +117,7 @@ button {
   cursor: pointer;
   transition: all 0.2s ease;
   border-radius: 12px;
-  border: 5px solid white;
+  border: 5px solid var(--a2);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -108,7 +126,7 @@ button:hover {
   transform: scale(1.05);
 }
 button span {
-  color: white;
+  color: var(--a2);
 }
 
 button:disabled, button[disabled] {
