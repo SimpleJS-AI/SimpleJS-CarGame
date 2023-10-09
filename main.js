@@ -1,6 +1,6 @@
 
 
-let colors = ['#b38ee6','#260a4d','#6d4e97','#766194','#fff'];
+let colors = ['#dabfff','#2c2a4a','#4f518c','#907ad6','#fff'];
 
 // *******
 // CLASSES
