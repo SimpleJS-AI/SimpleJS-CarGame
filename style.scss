@@ -132,7 +132,10 @@ button{
     }
 }
 button:disabled, button[disabled]{
-    opacity: .5;
+    border-color: var(--a3);
+    & span{
+        color: var(--a3);
+    }
     pointer-events: none;
 }
 
