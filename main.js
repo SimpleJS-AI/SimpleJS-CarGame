@@ -54,8 +54,10 @@ class Car {
         }
     }
     respawn(){
-        this.mesh.position.set(wpos(10),wpos(19),0);
-        this.mesh.rotation.set(0,0,Math.PI);
+        if(!this.failed) {
+            this.mesh.position.set(wpos(10), wpos(19), 0);
+            this.mesh.rotation.set(0, 0, Math.PI);
+        }
     }
     draw(){
         if(!this.failed) {
@@ -143,7 +145,8 @@ class Car {
         if(failed){
             this.updateRaycaster();
             if(this.manual){
-                this.respawn();
+                this.mesh.position.set(wpos(10),wpos(19),0);
+                this.mesh.rotation.set(0,0,Math.PI);
                 return;
             }
             this.failed = true;
