@@ -16,7 +16,7 @@
     <div class="controls">
         <button title="Restart" id="reset" onclick="location.href = location.href"><span class="material-symbols-rounded">refresh</span></button>
         <button title="Switch Build-mode" id="build-mode" onclick="setBuildMode(!buildMode);"><span class="material-symbols-rounded">edit</span></button>
-        <button title="Next Generation" id="next-evolution" disabled onclick="evolve()"><span class="material-symbols-rounded">skip_next</span></button>
+        <button title="Next Generation" id="next-evolution" disabled onclick="failedCounter = 0;evolve();"><span class="material-symbols-rounded">skip_next</span></button>
     </div>
     <div class="timeline">
         <span class="info-text">begin driving by using W,A,S,D ...</span>

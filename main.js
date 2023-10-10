@@ -602,7 +602,7 @@ window.addEventListener('resize', () => {
 
 let populationSize = 50;
 let nnInput = 9;
-let nnHidden = 18;
+let nnHidden = 50;
 let nnOutput = 2;
 let nnLR = .1;
 let objClass = Car;
