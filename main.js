@@ -53,8 +53,9 @@ class Car {
             scene.add(this.raycasterHelper[i]);
         }
     }
-    spawn(){
-        scene.add(this.mesh);
+    respawn(){
+        this.mesh.position.set(wpos(10),wpos(19),0);
+        this.mesh.rotation.set(0,0,Math.PI);
     }
     draw(){
         if(!this.failed) {
@@ -142,8 +143,7 @@ class Car {
         if(failed){
             this.updateRaycaster();
             if(this.manual){
-                this.mesh.position.set(wpos(10),wpos(19),0);
-                this.mesh.rotation.set(0,0,Math.PI);
+                this.respawn();
                 return;
             }
             this.failed = true;
@@ -301,6 +301,7 @@ function setBuildMode(bm){
         buildMode = false;
         active = true;
         hideGrid();
+        ga.forEach(x => x.respawn());
     }
 }
 
