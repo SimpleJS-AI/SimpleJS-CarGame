@@ -85,16 +85,17 @@ body{
         display: flex;
         justify-content: center;
         align-items: center;
-        border: 5px solid var(--a4);
+        border: 5px solid var(--a3);
         border-radius: 12px;
-        color: var(--a4);
+        color: var(--a3);
         &.active{
             border: 5px solid var(--a2);
             color: var(--a2);
+            transform: scale(1.05);
         }
         &.finished{
-            border: 5px solid var(--a3);
-            color: var(--a3);
+            border: 5px solid var(--a2);
+            color: var(--a2);
         }
     }
     & .arrow{
@@ -102,13 +103,14 @@ body{
         justify-content: center;
         align-items: center;
         & span{
-            color: var(--a4);
+            color: var(--a3);
         }
         &.active span{
             color: var(--a2);
+            transform: scale(1.05);
         }
         &.finished span{
-            color: var(--a3);
+            color: var(--a2);
         }
     }
 

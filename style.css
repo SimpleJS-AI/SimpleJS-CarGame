@@ -85,17 +85,18 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  border: 5px solid var(--a4);
+  border: 5px solid var(--a3);
   border-radius: 12px;
-  color: var(--a4);
+  color: var(--a3);
 }
 .timeline .phase.active {
   border: 5px solid var(--a2);
   color: var(--a2);
+  transform: scale(1.05);
 }
 .timeline .phase.finished {
-  border: 5px solid var(--a3);
-  color: var(--a3);
+  border: 5px solid var(--a2);
+  color: var(--a2);
 }
 .timeline .arrow {
   display: flex;
@@ -103,13 +104,14 @@ body {
   align-items: center;
 }
 .timeline .arrow span {
-  color: var(--a4);
+  color: var(--a3);
 }
 .timeline .arrow.active span {
   color: var(--a2);
+  transform: scale(1.05);
 }
 .timeline .arrow.finished span {
-  color: var(--a3);
+  color: var(--a2);
 }
 
 button {
