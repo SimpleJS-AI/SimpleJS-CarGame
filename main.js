@@ -295,9 +295,11 @@ function moveCameraSmoothly(){
 function setBuildMode(bm){
     if(bm){
         buildMode = true;
+        active = false;
         showGrid();
     }else{
         buildMode = false;
+        active = true;
         hideGrid();
     }
 }
@@ -472,6 +474,7 @@ function setNextPhase(){
     let nextGenerationButton = document.querySelector("#next-evolution");
     switch(nextPhase){
         case 0:
+            ga.forEach(x => scene.remove(x.mesh));
             nextButton.classList.remove("active");
             infoText.classList.add("active");
             progressBar.classList.add("active");
@@ -499,6 +502,7 @@ function setNextPhase(){
             progressBar.classList.add("active");
             break;
         case 3:
+            ga.forEach(x => scene.add(x.mesh));
             arrows[1].classList.add("active");
             nextButton.classList.add("active");
             infoText.classList.remove("active");
