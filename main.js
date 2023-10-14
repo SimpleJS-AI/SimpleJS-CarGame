@@ -347,8 +347,8 @@ function addTemplateWalls(){
     walls.push(new Wall(15,3,19,2));
     walls.push(new Wall(19,2,20,4));
     walls.push(new Wall(20,4,20,11));
-    walls.push(new Wall(20,11,15,12));
-    walls.push(new Wall(15,12,20,15));
+    walls.push(new Wall(20,11,18,12));
+    walls.push(new Wall(18,12,20,15));
     walls.push(new Wall(20,15,20,20));
 
     walls.push(new Wall(13,17,7,17));
@@ -361,9 +361,8 @@ function addTemplateWalls(){
     walls.push(new Wall(12,4,15,5));
     walls.push(new Wall(15,5,18,5));
     walls.push(new Wall(18,5,18,8));
-    walls.push(new Wall(18,8,11,12));
-    walls.push(new Wall(11,12,13,14));
-    walls.push(new Wall(13,14,17,16));
+    walls.push(new Wall(18,8,14,12));
+    walls.push(new Wall(14,12,17,16));
     walls.push(new Wall(17,16,17,18));
     walls.push(new Wall(17,18,15,18));
     walls.push(new Wall(15,18,13,17));
@@ -378,7 +377,7 @@ function addTemplateWalls(){
     addCheckpoint(15,3,15,5);
     addCheckpoint(19,2,18,5);
     addCheckpoint(20,11,18,8);
-    addCheckpoint(15,12,11,12);
+    addCheckpoint(18,12,14,12);
     addCheckpoint(20,15,17,16);
     addCheckpoint(20,20,17,18);
     addCheckpoint(15,20,15,18);
@@ -388,13 +387,14 @@ function addTemplateWalls(){
 
 class GridPos{
     constructor(x,y, disabled = false){
+        this.disabled = disabled;
         this.fX = x;
         this.fY = y;
         this.x = wpos(x);
         this.y = wpos(y);
         this.geometry = new THREE.CylinderGeometry( 2, 2, 2, 32 );
         this.material = new THREE.MeshBasicMaterial({color: 0xffffff });
-        if(disabled){
+        if(this.disabled){
             this.material.color.set(0xff0000);
         }
         this.mesh = new THREE.Mesh(this.geometry, this.material);
@@ -493,7 +493,10 @@ function highlightGridPos(){
         if(pos.fX === mousePos3D.x && pos.fY === mousePos3D.y){
             pos.material.color.set(0x00ff00);
         }else{
-            pos.material.color.set(0xffffff);
+            if(pos.disabled)
+                pos.material.color.set(0xff0000);
+            else
+                pos.material.color.set(0xffffff);
         }
     }
 }
@@ -506,6 +509,7 @@ function selectGridPos(){
     if(mousePos3D.x < 0 || mousePos3D.x > 20 || mousePos3D.y < 0 || mousePos3D.y > 20) return;
     for(const pos of gridPos){
         if(pos.fX === mousePos3D.x && pos.fY === mousePos3D.y){
+            if(pos.disabled) return;
             pos.mesh.scale.set(2,2,2);
         }
     }
