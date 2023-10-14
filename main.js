@@ -393,15 +393,27 @@ function moveCameraSmoothly(){
 function setBuildMode(bm){
     if(bm){
         buildMode = true;
+        document.querySelector("#delete-all").disabled = false;
+        document.querySelector("#switch-item").disabled = false;
         active = false;
         showGrid();
     }else{
         buildMode = false;
+        document.querySelector("#delete-all").disabled = true;
+        document.querySelector("#switch-item").disabled = true;
         active = true;
         hideGrid();
         ga.forEach(x => x.respawn());
     }
 }
+
+// **********
+// BUILD MODE
+// **********
+
+
+
+
 
 // *********
 // FUNCTIONS

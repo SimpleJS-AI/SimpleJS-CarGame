@@ -15,8 +15,11 @@
     </style>
     <div class="controls">
         <button title="Restart" id="reset" onclick="location.href = location.href"><span class="material-symbols-rounded">refresh</span></button>
-        <button title="Switch Build-mode" id="build-mode" onclick="setBuildMode(!buildMode);"><span class="material-symbols-rounded">edit</span></button>
         <button title="Next Generation" id="next-evolution" disabled onclick="evolve()"><span class="material-symbols-rounded">skip_next</span></button>
+        <div class="empty"></div>
+        <button title="Switch Build-mode" id="build-mode" onclick="setBuildMode(!buildMode);"><span class="material-symbols-rounded">edit</span></button>
+        <button title="Delete every Wall" id="delete-all" disabled onclick=""><span class="material-symbols-rounded">delete</span></button>
+        <button title="Toggle between Wall and Checkpoint" id="switch-item" disabled onclick=""><span class="material-symbols-rounded">flag</span></button>
     </div>
     <div class="timeline">
         <span class="info-text">begin driving by using W,A,S,D ...</span>
