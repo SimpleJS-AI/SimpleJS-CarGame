@@ -88,6 +88,9 @@ class Car {
             this.updateRaycaster();
             //this.visualizeRaycaster();
 
+            //checkpoints
+            this.checkCheckpoint();
+
             //NN
             if(!this.manual) {
                 let nnInput = this.raycasterData;
@@ -188,14 +191,30 @@ class Car {
     }
 
     //checkpoints
+    checkCheckpoint(){
+        let boundingBoxes = [];
+        for(const checkpoint of checkpoints){
+            boundingBoxes.push(new THREE.Box3().setFromObject(checkpoint.mesh));
+        }
+        for(let i = 0; i < boundingBoxes.length; i++){
+            if(boundingBoxes[i].containsPoint(this.mesh.position)){
+                this.bypassedCheckpoint(i);
+            }
+        }
+    }
     bypassedCheckpoint(index){
-        if(this.checkpoint === checkpoints.length - 1){
+        if(this.checkpoint === checkpoints.length){
             this.checkpoint = 0;
             this.reachedFinish = true;
+            if(!this.manual){
+                this.individual.fitness += 100000;
+                evolve();
+            }
         }
         if(this.checkpoint === index){
             this.checkpoint++;
-            this.individual.fitness += 10000;
+            if(!this.manual) this.individual.fitness += 10000;
+            console.log(this.checkpoint + " Checkpoint reached");
         }
     }
 }
@@ -324,7 +343,7 @@ function addTemplateWalls(){
     walls.push(new Wall(12,17,8,17));
 
     addCheckpoint(0,10,3,10);
-    addCheckpoint(8,0,8,3);
+    addCheckpoint(6,0,8,3);
     addCheckpoint(17,12,20,12);
     addCheckpoint(12,17,12,20);
 }
@@ -410,6 +429,7 @@ async function loadCarMesh(){
     carMesh.children[0].children[3].material.color.set(colors[4]);
 }
 function evolve() {
+    failedCounter = 0;
     ga.population.forEach(x => x.obj.failed = true);
     setTimeout(() => {
         ga.evolve();
@@ -508,7 +528,6 @@ function animate(){
         else {
             ga.population.forEach(x => x.obj.draw());
             if (failedCounter >= populationSize) {
-                failedCounter = 0;
                 evolve();
             }
         }
