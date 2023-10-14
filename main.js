@@ -103,7 +103,7 @@ class Car {
                     this.acceleration = false;
                     this.deceleration = true;
                 }
-            }else{
+            }else if(nextPhase === 1){
                 let data = new TrainingData(this.raycasterData, [this.steeringAngle / 4 + 0.5, this.acceleration ? 1 : 0])
                 if(trainingData.length === 0){
                     trainingData.push(data);
@@ -121,22 +121,6 @@ class Car {
         }
     }
     checkFailed(){
-        /*this.raycaster0.set(this.mesh.position, new THREE.Vector3(1,0,0)
-            .applyQuaternion(this.mesh.quaternion)
-            .applyQuaternion(new THREE.Quaternion()
-                .setFromAxisAngle(new THREE.Vector3(0,0,1), -Math.PI/8)));
-        this.raycasterHelper0 = new THREE.ArrowHelper(this.raycaster0.ray.direction, this.raycaster0.ray.origin, 10, 0xff0000);
-        this.raycasterHelper0.position.z = 10;
-        scene.add(this.raycasterHelper0);*/
-        /*let intersections = this.raycaster0.intersectObjects(scene.children, );
-        if(intersections.length > 0){
-            console.log(intersections[0].distance);
-        }*/
-        /*for (const wall of w){
-            if(this.carBox.intersectsBox(new THREE.Box3().setFromObject(wall.mesh, true))){
-                return true;
-            }
-        }*/
         let failed = false;
         if(!this.manual) {
             if (this.speed === 0) this.speedFailCounter++;
@@ -152,6 +136,7 @@ class Car {
             if(this.manual){
                 this.mesh.position.set(wpos(10),wpos(19),0);
                 this.mesh.rotation.set(0,0,Math.PI);
+                trainingData = [];
                 return;
             }
             this.failed = true;
@@ -192,12 +177,8 @@ class Car {
 
     //checkpoints
     checkCheckpoint(){
-        let boundingBoxes = [];
-        for(const checkpoint of checkpoints){
-            boundingBoxes.push(new THREE.Box3().setFromObject(checkpoint.mesh));
-        }
-        for(let i = 0; i < boundingBoxes.length; i++){
-            if(boundingBoxes[i].containsPoint(this.mesh.position)){
+        for(let i = 0; i < checkpointBoundingBoxes.length; i++){
+            if(checkpointBoundingBoxes[i].containsPoint(this.mesh.position)){
                 this.bypassedCheckpoint(i);
             }
         }
@@ -207,17 +188,24 @@ class Car {
             this.checkpoint = 0;
             this.reachedFinish = true;
             if(!this.manual){
-                this.individual.fitness += 100000;
-                evolve();
+                this.individual.fitness += 5000 * finishPoints;
+                finishPoints--;
+                failedCounter++;
             }
         }
         if(this.checkpoint === index){
             this.checkpoint++;
-            if(!this.manual) this.individual.fitness += 10000;
+            if(!this.manual){
+                this.individual.fitness += 1000;
+            }
+            else{
+                setProgressValue(this.checkpoint*50);
+            }
             console.log(this.checkpoint + " Checkpoint reached");
         }
     }
 }
+let finishPoints = 20;
 
 
 
@@ -313,12 +301,14 @@ function to2D(pos) {
 }
 
 let checkpoints = [];
+let checkpointBoundingBoxes = [];
 function addCheckpoint(x1,y1,x2,y2){
     checkpoints.push(new Checkpoint(x1,y1,x2,y2,checkpoints.length));
     checkpoints[checkpoints.length - 1].setAsFinish();
     if(checkpoints.length > 1){
         checkpoints[checkpoints.length - 2].unsetAsFinish();
     }
+    checkpointBoundingBoxes.push(new THREE.Box3().setFromObject(checkpoints[checkpoints.length - 1].mesh));
 }
 
 
@@ -434,6 +424,7 @@ function evolve() {
     setTimeout(() => {
         ga.evolve();
     }, 100);
+    finishPoints = 20;
 }
 function removeObjWithChildren(obj){
     /*if(obj.children.length > 0){
@@ -536,7 +527,7 @@ function animate(){
     while(performance.now() <= nextFrameTime + 1000/30 && trainingPhase){
         train();
     }
-    if(nextPhase === 1) setProgressValue((manualDriveTime + (manualDriveStartTime === 0 ? 0 : (performance.now() - manualDriveStartTime))) / 1); //TODO SET TO 100
+    //if(nextPhase === 1) setProgressValue((manualDriveTime + (manualDriveStartTime === 0 ? 0 : (performance.now() - manualDriveStartTime))) / 1);
     moveCameraSmoothly();
     // cube.rotation.x += 0.01;
     // cube.rotation.y += 0.01;
