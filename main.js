@@ -39,6 +39,8 @@ class Car {
         this.acceleration = false;
         this.deceleration = false;
         this.speedFailCounter = 0;
+        this.checkpoint = 0;
+        this.reachedFinish = false;
 
         this.raycaster0 = new THREE.Raycaster(undefined, undefined, 0, 10);
 
@@ -184,6 +186,18 @@ class Car {
         //this.mesh.children[0].children[0].children[3].material = this.material;
         this.mesh.children[0].children[0].children[3].material = new THREE.MeshToonMaterial({color: color, gradientMap: fiveTone });
     }
+
+    //checkpoints
+    bypassedCheckpoint(index){
+        if(this.checkpoint === checkpoints.length - 1){
+            this.checkpoint = 0;
+            this.reachedFinish = true;
+        }
+        if(this.checkpoint === index){
+            this.checkpoint++;
+            this.individual.fitness += 10000;
+        }
+    }
 }
 
 
@@ -223,7 +237,72 @@ class Wall {
         scene.add(this.mesh);
     }
 }
-//TODO
+
+class Checkpoint{
+    constructor(x1,y1,x2,y2,index){
+        this.x1 = wpos(x1);
+        this.y1 = wpos(y1);
+        this.x2 = wpos(x2);
+        this.y2 = wpos(y2);
+        this.index = index;
+        this.p1 = new THREE.Vector3(this.x1,this.y1,0);
+        this.p2 = new THREE.Vector3(this.x2,this.y2,0);
+        this.material = new THREE.MeshLambertMaterial({color: colors[3]});
+        this.geometry = new THREE.BoxGeometry(this.p1.distanceTo(this.p2), 5,4);
+        this.mesh = new THREE.Mesh(this.geometry, this.material);
+        this.mesh.position.set((this.x1+this.x2)/2,(this.y1+this.y2)/2,0);
+        this.mesh.rotation.z = Math.atan2(this.y2-this.y1,this.x2-this.x1);
+        scene.add(this.mesh);
+        this.showIndex();
+    }
+    showIndex(){
+        let text = document.createElement('div');
+        text.style.position = 'absolute';
+        text.className = "checkpoint-index";
+        text.innerHTML = this.index+1;
+        let pos1 = to2D(this.p1);
+        let pos2 = to2D(this.p2);
+        text.style.top = (pos1.y + pos2.y)/2 + "px";
+        text.style.left = (pos1.x + pos2.x)/2 + "px";
+        text.style.transform = "translate(-50%, -50%)";
+        text.style.backgroundColor = colors[0];
+        text.style.width = "16px";
+        text.style.height = "20px";
+        text.style.textAlign = "center";
+        document.body.appendChild(text);
+    }
+    setAsFinish(){
+        this.material.color.set(colors[4]);
+    }
+    unsetAsFinish(){
+        this.material.color.set(colors[3]);
+    }
+}
+
+function updateCheckpointIndex(){
+    document.querySelectorAll(".checkpoint-index").forEach(x => x.remove());
+    for(const checkpoint of checkpoints){
+        checkpoint.showIndex();
+    }
+}
+
+function to2D(pos) {
+    let vector = pos.clone().project(camera);
+    vector.x = (vector.x + 1) / 2 * window.innerWidth;
+    vector.y = -(vector.y - 1) / 2 * window.innerHeight;
+    return vector;
+}
+
+let checkpoints = [];
+function addCheckpoint(x1,y1,x2,y2){
+    checkpoints.push(new Checkpoint(x1,y1,x2,y2,checkpoints.length));
+    checkpoints[checkpoints.length - 1].setAsFinish();
+    if(checkpoints.length > 1){
+        checkpoints[checkpoints.length - 2].unsetAsFinish();
+    }
+}
+
+
 function addTemplateWalls(){
     walls.push(new Wall(6,20,0,14));
     walls.push(new Wall(0,14,0,6));
@@ -243,7 +322,13 @@ function addTemplateWalls(){
     walls.push(new Wall(13,12,17,12));
     walls.push(new Wall(17,12,12,17));
     walls.push(new Wall(12,17,8,17));
+
+    addCheckpoint(0,10,3,10);
+    addCheckpoint(8,0,8,3);
+    addCheckpoint(17,12,20,12);
+    addCheckpoint(12,17,12,20);
 }
+
 class GridPos{
     constructor(x,y, disabled = false){
         this.x = wpos(x);
@@ -286,6 +371,7 @@ function wpos(pos){ // relative wall position
 
 function moveCameraSmoothly(){
     if(camera.position.y === !buildMode ? 0 : -200){
+        updateCheckpointIndex();
         if(buildMode && camera.position.y < 0){
             camera.position.y += 5;
             camera.lookAt(0,0,-camera.position.z*.2);
@@ -431,7 +517,7 @@ function animate(){
     while(performance.now() <= nextFrameTime + 1000/30 && trainingPhase){
         train();
     }
-    if(nextPhase === 1) setProgressValue((manualDriveTime + (manualDriveStartTime === 0 ? 0 : (performance.now() - manualDriveStartTime))) / 100);
+    if(nextPhase === 1) setProgressValue((manualDriveTime + (manualDriveStartTime === 0 ? 0 : (performance.now() - manualDriveStartTime))) / 1); //TODO SET TO 100
     moveCameraSmoothly();
     // cube.rotation.x += 0.01;
     // cube.rotation.y += 0.01;
@@ -459,6 +545,7 @@ async function load() {
         w.push(new Wall(...wall,true));
     }
     ga = new GeneticAlgorithm(populationSize, nnInput, nnHidden, nnOutput, nnLR, objClass);
+    ga.setLr(.01);
     c = new Car(null, true);
     t = new Date() - t;
     console.log('loading time: ' + t + 'ms');
