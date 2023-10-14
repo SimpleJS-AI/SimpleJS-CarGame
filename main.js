@@ -199,7 +199,7 @@ class Car {
                 this.individual.fitness += 1000;
             }
             else{
-                setProgressValue(this.checkpoint*50);
+                setProgressValue(this.checkpoint*(200/checkpoints.length));
             }
             console.log(this.checkpoint + " Checkpoint reached");
         }
@@ -214,7 +214,7 @@ let finishPoints = 20;
 // ***********
 
 let buildMode = false;
-const walls = [];
+let walls = [];
 class Wall {
     constructor(x1,y1,x2,y2, border = false){
         this.x1 = wpos(x1);
@@ -313,7 +313,7 @@ function addCheckpoint(x1,y1,x2,y2){
 
 
 function addTemplateWalls(){
-    walls.push(new Wall(6,20,0,14));
+    /*walls.push(new Wall(6,20,0,14));
     walls.push(new Wall(0,14,0,6));
     walls.push(new Wall(0,6,6,0));
     walls.push(new Wall(6,0,14,0));
@@ -335,11 +335,61 @@ function addTemplateWalls(){
     addCheckpoint(0,10,3,10);
     addCheckpoint(6,0,8,3);
     addCheckpoint(17,12,20,12);
-    addCheckpoint(12,17,12,20);
+    addCheckpoint(12,17,12,20);*/
+
+    walls.push(new Wall(20,20,6,20));
+    walls.push(new Wall(6,20,2,12));
+    walls.push(new Wall(2,12,2,3));
+    walls.push(new Wall(2,3,6,0));
+    walls.push(new Wall(6,0,9,2));
+    walls.push(new Wall(9,2,12,0));
+    walls.push(new Wall(12,0,15,3));
+    walls.push(new Wall(15,3,19,2));
+    walls.push(new Wall(19,2,20,4));
+    walls.push(new Wall(20,4,20,11));
+    walls.push(new Wall(20,11,15,12));
+    walls.push(new Wall(15,12,20,15));
+    walls.push(new Wall(20,15,20,20));
+
+    walls.push(new Wall(13,17,7,17));
+    walls.push(new Wall(7,17,5,15));
+    walls.push(new Wall(5,15,4,9));
+    walls.push(new Wall(4,9,4,6));
+    walls.push(new Wall(4,6,6,3));
+    walls.push(new Wall(6,3,9,5));
+    walls.push(new Wall(9,5,12,4));
+    walls.push(new Wall(12,4,15,5));
+    walls.push(new Wall(15,5,18,5));
+    walls.push(new Wall(18,5,18,8));
+    walls.push(new Wall(18,8,11,12));
+    walls.push(new Wall(11,12,13,14));
+    walls.push(new Wall(13,14,17,16));
+    walls.push(new Wall(17,16,17,18));
+    walls.push(new Wall(17,18,15,18));
+    walls.push(new Wall(15,18,13,17));
+
+    addCheckpoint(6,20,7,17);
+    addCheckpoint(4,16,5,15);
+    addCheckpoint(2,9,4,9);
+    addCheckpoint(2,3,4,6);
+    addCheckpoint(6,0,6,3);
+    addCheckpoint(9,2,9,5);
+    addCheckpoint(12,0,12,4);
+    addCheckpoint(15,3,15,5);
+    addCheckpoint(19,2,18,5);
+    addCheckpoint(20,11,18,8);
+    addCheckpoint(15,12,11,12);
+    addCheckpoint(20,15,17,16);
+    addCheckpoint(20,20,17,18);
+    addCheckpoint(15,20,15,18);
+    addCheckpoint(12,20,12,17);
+
 }
 
 class GridPos{
     constructor(x,y, disabled = false){
+        this.fX = x;
+        this.fY = y;
         this.x = wpos(x);
         this.y = wpos(y);
         this.geometry = new THREE.CylinderGeometry( 2, 2, 2, 32 );
@@ -395,12 +445,14 @@ function setBuildMode(bm){
         buildMode = true;
         document.querySelector("#delete-all").disabled = false;
         document.querySelector("#switch-item").disabled = false;
+        document.querySelector("#reset-grid").disabled = false;
         active = false;
         showGrid();
     }else{
         buildMode = false;
         document.querySelector("#delete-all").disabled = true;
         document.querySelector("#switch-item").disabled = true;
+        document.querySelector("#reset-grid").disabled = true;
         active = true;
         hideGrid();
         ga.forEach(x => x.respawn());
@@ -410,8 +462,91 @@ function setBuildMode(bm){
 // **********
 // BUILD MODE
 // **********
+let mousePos3D = new THREE.Vector3();
+function to3D(e){ // by https://stackoverflow.com/questions/13055214/mouse-canvas-x-y-to-three-js-world-x-y-z
+    let vec = new THREE.Vector3(); // create once and reuse
+    vec.set(
+        ( e.clientX / window.innerWidth ) * 2 - 1,
+        - ( e.clientY / window.innerHeight ) * 2 + 1,
+        0.5 );
 
+    vec.unproject( camera );
 
+    vec.sub( camera.position ).normalize();
+
+    let distance = - camera.position.z / vec.z;
+
+    mousePos3D.copy( camera.position ).add( vec.multiplyScalar( distance ) );
+    mousePos3D.x /= 20;
+    mousePos3D.x += 10;
+    mousePos3D.y /= 20;
+    mousePos3D.y += 10;
+
+    mousePos3D.x = Math.round(mousePos3D.x);
+    mousePos3D.y = Math.round(mousePos3D.y);
+
+    console.log(mousePos3D);
+}
+
+function highlightGridPos(){
+    for(const pos of gridPos){
+        if(pos.fX === mousePos3D.x && pos.fY === mousePos3D.y){
+            pos.material.color.set(0x00ff00);
+        }else{
+            pos.material.color.set(0xffffff);
+        }
+    }
+}
+
+let buildCheckpoint = false;
+let wallBuildPhase = 0;
+let wallBuildPos1;
+let wallBuildPos2;
+function selectGridPos(){
+    if(mousePos3D.x < 0 || mousePos3D.x > 20 || mousePos3D.y < 0 || mousePos3D.y > 20) return;
+    for(const pos of gridPos){
+        if(pos.fX === mousePos3D.x && pos.fY === mousePos3D.y){
+            pos.mesh.scale.set(2,2,2);
+        }
+    }
+    if(wallBuildPhase >= 1){
+        wallBuildPos2 = mousePos3D.clone();
+        buildCheckpoint ? addCheckpoint(wallBuildPos1.x,wallBuildPos1.y,wallBuildPos2.x,wallBuildPos2.y) : walls.push(new Wall(wallBuildPos1.x,wallBuildPos1.y,wallBuildPos2.x,wallBuildPos2.y));
+        for(const pos of gridPos){
+            pos.mesh.scale.set(1,1,1);
+        }
+        wallBuildPhase = 0;
+        return;
+    }
+    wallBuildPos1 = mousePos3D.clone();
+    wallBuildPhase++;
+}
+
+function deleteAll(template = false){
+    for(const wall of walls){
+        scene.remove(wall.mesh);
+    }
+    walls = [];
+    for(const checkpoint of checkpoints){
+        scene.remove(checkpoint.mesh);
+    }
+    checkpoints = [];
+    checkpointBoundingBoxes = [];
+    if(template) addTemplateWalls();
+}
+
+document.addEventListener('mousemove', e => {
+    if(buildMode){
+        to3D(e);
+        highlightGridPos();
+    }
+});
+document.addEventListener('mousedown', e => {
+    if(buildMode){
+        to3D(e);
+        selectGridPos();
+    }
+})
 
 
 
