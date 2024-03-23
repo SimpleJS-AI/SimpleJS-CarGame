@@ -22,7 +22,8 @@ class TrainingData{
     }
 }
 class Car {
-    constructor(individual, manual = false){
+    constructor(individual, manual = false, noindividual = false){
+        this.noindividual = noindividual;
         this.manual = manual;
         this.individual = individual;
         this.x = wpos(10);
@@ -122,7 +123,7 @@ class Car {
     }
     checkFailed(){
         let failed = false;
-        if(!this.manual) {
+        if(!this.manual){
             if (this.speed === 0) this.speedFailCounter++;
             if (this.speedFailCounter > 100) failed = true;
         }
@@ -137,6 +138,11 @@ class Car {
                 this.mesh.position.set(wpos(10),wpos(19),0);
                 this.mesh.rotation.set(0,0,Math.PI);
                 trainingData = [];
+                return;
+            }
+            if(this.noindividual){
+                this.mesh.position.set(wpos(10),wpos(19),0);
+                this.mesh.rotation.set(0,0,Math.PI);
                 return;
             }
             this.failed = true;
@@ -635,6 +641,38 @@ function keyUp(e){
 
 let trainingIterations = 200; //can be changed
 let trainingPosition = 0; // do not change
+let worker = new Worker('worker.js');
+worker.onmessage = function(e){
+    if(e.data.type === 'trainingStarted'){
+        cnn2 = new NeuralNetwork(nnInput, nnHidden, nnOutput, nnLR);
+        c2 = new Car(null, false, true);
+        c2.individual = {};
+        c2.individual.fitness = 0;
+        c2.individual.nn = cnn2;
+        scene.add(c2.mesh);
+        trainingPhase = true;
+    }
+    else if(e.data.type === 'trainingUpdated'){
+        let data = e.data;
+        cnn2._wInputHidden._data = data.weights[0];
+        cnn2._wHiddenOutput._data = data.weights[1];
+        setProgressValue(data.timePercentage * 200);
+    }
+    else if(e.data.type === 'trainingDone'){
+        scene.remove(c2.mesh);
+        trainingPhase = false;
+        setNextPhase();
+    }
+}
+let c2, cnn2;
+function startBPTraining(){
+    let data = {};
+    data.trainingTime = 60;
+    data.trainingData = trainingData;
+    data.type = "bp";
+    data.parameters = [nnInput, nnHidden, nnOutput, nnLR];
+    worker.postMessage(data);
+}
 function train(){
     if(trainingPosition >= trainingData.length){
         trainingPosition = 0;
@@ -674,10 +712,14 @@ function animate(){
             }
         }
     }
-    if(trainingPhase) train();
+    if(trainingPhase){
+        c2.draw();
+
+    }
+    /*if(trainingPhase) train();
     while(performance.now() <= nextFrameTime + 1000/30 && trainingPhase){
         train();
-    }
+    }*/
     //if(nextPhase === 1) setProgressValue((manualDriveTime + (manualDriveStartTime === 0 ? 0 : (performance.now() - manualDriveStartTime))) / 1);
     moveCameraSmoothly();
     // cube.rotation.x += 0.01;
@@ -744,7 +786,7 @@ function setNextPhase(){
             break;
         case 2:
             scene.remove(c.mesh);
-            trainingPhase = true;
+            startBPTraining();
             arrows[0].classList.remove("active");
             arrows[0].classList.add("finished");
             phases[1].classList.add("active");
